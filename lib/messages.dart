@@ -88,6 +88,7 @@ class Drone {
     pigeonMap['roll'] = roll;
     pigeonMap['pitch'] = pitch;
     pigeonMap['yaw'] = yaw;
+    pigeonMap['name'] = name;
     return pigeonMap;
   }
 
@@ -104,6 +105,7 @@ class Drone {
       roll: pigeonMap['roll'] as double?,
       pitch: pigeonMap['pitch'] as double?,
       yaw: pigeonMap['yaw'] as double?,
+      name: pigeonMap['name'] as String?,
     );
   }
 }
