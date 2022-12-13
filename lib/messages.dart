@@ -61,6 +61,7 @@ class Drone {
     this.roll,
     this.pitch,
     this.yaw,
+    this.name,
   });
 
   String? status;
@@ -73,6 +74,7 @@ class Drone {
   double? roll;
   double? pitch;
   double? yaw;
+  String? name;
 
   Object encode() {
     final Map<Object?, Object?> pigeonMap = <Object?, Object?>{};
