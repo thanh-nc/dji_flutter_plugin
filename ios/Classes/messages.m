@@ -105,7 +105,8 @@ static id GetNullableObjectAtIndex(NSArray* array, NSInteger key) {
     speed:(nullable NSNumber *)speed
     roll:(nullable NSNumber *)roll
     pitch:(nullable NSNumber *)pitch
-    yaw:(nullable NSNumber *)yaw {
+    yaw:(nullable NSNumber *)yaw
+    name:(nullable NSString *)name{
   FLTDrone* pigeonResult = [[FLTDrone alloc] init];
   pigeonResult.status = status;
   pigeonResult.error = error;
@@ -117,6 +118,7 @@ static id GetNullableObjectAtIndex(NSArray* array, NSInteger key) {
   pigeonResult.roll = roll;
   pigeonResult.pitch = pitch;
   pigeonResult.yaw = yaw;
+  pigeonResult.name = name;
   return pigeonResult;
 }
 + (FLTDrone *)fromMap:(NSDictionary *)dict {
@@ -131,6 +133,7 @@ static id GetNullableObjectAtIndex(NSArray* array, NSInteger key) {
   pigeonResult.roll = GetNullableObject(dict, @"roll");
   pigeonResult.pitch = GetNullableObject(dict, @"pitch");
   pigeonResult.yaw = GetNullableObject(dict, @"yaw");
+  pigeonResult.name = GetNullableObject(dict, @"name");
   return pigeonResult;
 }
 + (nullable FLTDrone *)nullableFromMap:(NSDictionary *)dict { return (dict) ? [FLTDrone fromMap:dict] : nil; }
@@ -146,6 +149,7 @@ static id GetNullableObjectAtIndex(NSArray* array, NSInteger key) {
     @"roll" : (self.roll ?: [NSNull null]),
     @"pitch" : (self.pitch ?: [NSNull null]),
     @"yaw" : (self.yaw ?: [NSNull null]),
+    @"name" : (self.name ?: [NSNull null]),
   };
 }
 @end
@@ -199,19 +203,19 @@ static id GetNullableObjectAtIndex(NSArray* array, NSInteger key) {
 @interface FLTDjiHostApiCodecReader : FlutterStandardReader
 @end
 @implementation FLTDjiHostApiCodecReader
-- (nullable id)readValueOfType:(UInt8)type 
+- (nullable id)readValueOfType:(UInt8)type
 {
   switch (type) {
-    case 128:     
+    case 128:
       return [FLTBattery fromMap:[self readValue]];
     
-    case 129:     
+    case 129:
       return [FLTMedia fromMap:[self readValue]];
     
-    case 130:     
+    case 130:
       return [FLTVersion fromMap:[self readValue]];
     
-    default:    
+    default:
       return [super readValueOfType:type];
     
   }
@@ -221,20 +225,20 @@ static id GetNullableObjectAtIndex(NSArray* array, NSInteger key) {
 @interface FLTDjiHostApiCodecWriter : FlutterStandardWriter
 @end
 @implementation FLTDjiHostApiCodecWriter
-- (void)writeValue:(id)value 
+- (void)writeValue:(id)value
 {
   if ([value isKindOfClass:[FLTBattery class]]) {
     [self writeByte:128];
     [self writeValue:[value toMap]];
-  } else 
+  } else
   if ([value isKindOfClass:[FLTMedia class]]) {
     [self writeByte:129];
     [self writeValue:[value toMap]];
-  } else 
+  } else
   if ([value isKindOfClass:[FLTVersion class]]) {
     [self writeByte:130];
     [self writeValue:[value toMap]];
-  } else 
+  } else
 {
     [super writeValue:value];
   }
@@ -630,16 +634,16 @@ void FLTDjiHostApiSetup(id<FlutterBinaryMessenger> binaryMessenger, NSObject<FLT
 @interface FLTDjiFlutterApiCodecReader : FlutterStandardReader
 @end
 @implementation FLTDjiFlutterApiCodecReader
-- (nullable id)readValueOfType:(UInt8)type 
+- (nullable id)readValueOfType:(UInt8)type
 {
   switch (type) {
-    case 128:     
+    case 128:
       return [FLTDrone fromMap:[self readValue]];
     
-    case 129:     
+    case 129:
       return [FLTStream fromMap:[self readValue]];
     
-    default:    
+    default:
       return [super readValueOfType:type];
     
   }
@@ -649,16 +653,16 @@ void FLTDjiHostApiSetup(id<FlutterBinaryMessenger> binaryMessenger, NSObject<FLT
 @interface FLTDjiFlutterApiCodecWriter : FlutterStandardWriter
 @end
 @implementation FLTDjiFlutterApiCodecWriter
-- (void)writeValue:(id)value 
+- (void)writeValue:(id)value
 {
   if ([value isKindOfClass:[FLTDrone class]]) {
     [self writeByte:128];
     [self writeValue:[value toMap]];
-  } else 
+  } else
   if ([value isKindOfClass:[FLTStream class]]) {
     [self writeByte:129];
     [self writeValue:[value toMap]];
-  } else 
+  } else
 {
     [super writeValue:value];
   }

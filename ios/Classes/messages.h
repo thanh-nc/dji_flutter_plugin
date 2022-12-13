@@ -34,7 +34,8 @@ NS_ASSUME_NONNULL_BEGIN
     speed:(nullable NSNumber *)speed
     roll:(nullable NSNumber *)roll
     pitch:(nullable NSNumber *)pitch
-    yaw:(nullable NSNumber *)yaw;
+    yaw:(nullable NSNumber *)yaw
+    name:(nullable NSString *)name;
 @property(nonatomic, copy, nullable) NSString * status;
 @property(nonatomic, copy, nullable) NSString * error;
 @property(nonatomic, strong, nullable) NSNumber * batteryPercent;
@@ -45,6 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong, nullable) NSNumber * roll;
 @property(nonatomic, strong, nullable) NSNumber * pitch;
 @property(nonatomic, strong, nullable) NSNumber * yaw;
+@property(nonatomic, strong, nullable) NSString * name;
 @end
 
 @interface FLTMedia : NSObject
