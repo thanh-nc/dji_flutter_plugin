@@ -92,7 +92,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 
 	public func connectDroneWithError(_: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
 		print("=== DjiPlugin iOS: Connect Drone Started")
-
+		DJISDKManager.enableBridgeMode(withBridgeAppIP: "172.40.0.180")
 		DJISDKManager.startConnectionToProduct()
 	}
 
@@ -328,10 +328,24 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 
 			case "waypointMission":
 				// Waypoint Mission
-				if let wayPointMission = waypointMission(flightElement) {
-					scheduledElements.append(wayPointMission)
-				}
-				break
+                if let drone = drone {
+                    if drone.model == DJIAircraftModelNameMatrice300RTK {
+                        if let wayPointV2Mission = waypointV2Mission(flightElement) {
+                            scheduledElements.append(wayPointV2Mission)
+                        }
+                    } else {
+                        if let wayPointMission = waypointMission(flightElement) {
+                            scheduledElements.append(wayPointMission)
+                        }
+                    }
+                }
+                break
+            case "waypointV2Mission":
+                // Waypoint Mission
+                if let wayPointV2Mission = waypointV2Mission(flightElement) {
+                    scheduledElements.append(wayPointV2Mission)
+                }
+                break
 
 			case "hotpointAction":
 				// Hot Point
@@ -478,6 +492,61 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			return nil
 		}
 	}
+    
+    // MARK: - WaypointV2 Methods
+    func waypointV2Mission(_ flightElementWaypointMission: FlightElement) -> DJIWaypointV2Mission? {
+        // Waypoint Mission Initialization
+        let mission = DJIMutableWaypointV2Mission()
+
+        if let latitude = flightElementWaypointMission.pointOfInterest?.latitude, let longitude = flightElementWaypointMission.pointOfInterest?.longitude {
+            let pointOfInteresetCoordinate = CLLocationCoordinate2DMake(latitude, longitude)
+        }
+        
+        mission.maxFlightSpeed = Float(flightElementWaypointMission.maxFlightSpeed ?? 15)
+        mission.autoFlightSpeed = Float(flightElementWaypointMission.autoFlightSpeed ?? 8)
+
+        switch flightElementWaypointMission.finishedAction {
+        case "autoLand":
+            mission.finishedAction = .autoLanding
+        case "continueUntilStop":
+            mission.finishedAction = .continueUntilStop
+        default:
+            mission.finishedAction = .noAction
+        }
+
+        mission.exitMissionOnRCSignalLost = flightElementWaypointMission.exitMissionOnRCSignalLost ?? true
+
+        mission.gotoFirstWaypointMode = .pointToPoint
+        mission.repeatTimes = 1
+
+        // Waypoints
+        if let flightWaypoints = flightElementWaypointMission.waypoints {
+            for flightWaypoint in flightWaypoints {
+                if let latitude = flightWaypoint.location?.latitude, let longitude = flightWaypoint.location?.longitude, let altitude = flightWaypoint.location?.altitude {
+                    let coordinate = CLLocationCoordinate2DMake(latitude, longitude)
+                    let waypoint = DJIWaypointV2(coordinate: coordinate)
+                    waypoint.altitude = Float(altitude)
+                    waypoint.heading = flightWaypoint.heading ?? 0
+                    switch flightWaypoint.turnMode {
+                    case "counterClockwise":
+                        waypoint.turnMode = .counterClockwise
+                    default:
+                        waypoint.turnMode = .clockwise
+                    }
+
+                    mission.addWaypoint(waypoint)
+                } else {
+                    print("=== DjiPlugin iOS: waypointMission - waypoint without location coordinates - skipping")
+                }
+            }
+            return DJIWaypointV2Mission(mission: mission)
+        } else {
+            print("=== DjiPlugin iOS: waypointMission - No waypoints available - exiting")
+            self._fltSetStatus("Error")
+            self._fltSetError("waypointMission - No waypoints available - exiting")
+            return nil
+        }
+    }
 
 	// MARK: - Media Methods
 
