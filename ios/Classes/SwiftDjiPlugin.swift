@@ -5,11 +5,11 @@ import Flutter
 import UIKit
 
 public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJISDKManagerDelegate, DJIFlightControllerDelegate, DJIBatteryDelegate, DJIVideoFeedListener, VideoFrameProcessor {
-
+	
 	static var fltDjiFlutterApi: FLTDjiFlutterApi?
 	let fltDrone = FLTDrone()
 	let fltStream = FLTStream()
-
+	
 	var drone: DJIAircraft?
 	var droneCurrentLocation: CLLocation?
 	var mediaFileList = [DJIMediaFile?]()
@@ -49,10 +49,10 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			}
 		}
 	}
-
+	
 	private func _fltSendVideo(_ data: Data) {
 		fltStream.data = FlutterStandardTypedData(bytes: data)
-
+		
 		SwiftDjiPlugin.fltDjiFlutterApi?.sendVideoStream(fltStream) { e in
 			if let error = e {
 				print("=== DjiPlugin iOS: Error: sendVideo Closure Error")
@@ -92,7 +92,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 
 	public func connectDroneWithError(_: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
 		print("=== DjiPlugin iOS: Connect Drone Started")
-		DJISDKManager.enableBridgeMode(withBridgeAppIP: "172.40.0.180")
+		DJISDKManager.enableBridgeMode(withBridgeAppIP: "172.40.1.157")
 		DJISDKManager.startConnectionToProduct()
 	}
 
@@ -106,7 +106,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 		if let product = DJISDKManager.product() {
 			if product.isKind(of: DJIAircraft.self) {
 				drone = (DJISDKManager.product()! as! DJIAircraft)
-                drone?.getNameWithCompletion({ [weak self] name, _ in
+				drone?.getNameWithCompletion({ [weak self] name, _ in
                     guard let self = self else { return }
                     self.fltDrone.name = name
                 })
@@ -158,7 +158,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			_fltSetError("Takeoff Failed - No Flight Controller")
 		}
 	}
-
+	
 	public func landWithError(_: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
 		if let _droneFlightController = drone?.flightController {
 			print("=== DjiPlugin iOS: Landing Started")
@@ -171,12 +171,12 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			_fltSetError("Landing Failed - No Flight Controller")
 		}
 	}
-
+	
 	// MARK: - Mobile Remote Controller
-
+	
 	public func mobileRemoteControllerEnabled(_ enabled: NSNumber, leftStickHorizontal: NSNumber, leftStickVertical: NSNumber, rightStickHorizontal: NSNumber, rightStickVertical: NSNumber, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
 		// the `enabled` property is redundant at this point, but it's here as a placeholder for possible usage in the future.
-
+		
 		if (drone?.mobileRemoteController?.isConnected == true) {
 			drone?.mobileRemoteController?.leftStickHorizontal = Float(truncating: leftStickHorizontal)
 			drone?.mobileRemoteController?.leftStickVertical = Float(truncating: leftStickVertical)
@@ -190,19 +190,19 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			self._fltSetError("Mobile Remote - isConnected FALSE")
 		}
 	}
-
+	
 	// MARK: - Virtual Stick Methods
-
+	
 	public func virtualStickEnabled(_ enabled: NSNumber, pitch: NSNumber, roll: NSNumber, yaw: NSNumber, verticalThrottle: NSNumber, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
 		var virtualStickControlData: DJIVirtualStickFlightControlData = DJIVirtualStickFlightControlData()
-
+		
         guard let _droneFlightController = drone?.flightController else {
 			print("=== DjiPlugin iOS: Virtual Stick - No Flight Controller")
 			_fltSetStatus("Virtual Stick Failed")
 			_fltSetError("Virtual Stick - No Flight Controller")
 			return
 		}
-
+		
 		_droneFlightController.setVirtualStickModeEnabled(enabled as! Bool, withCompletion: { (error: Error?) in
 			if (error != nil) {
 				print("=== DjiPlugin iOS: Enable Virtual Stick failed with error - \(String(describing: error?.localizedDescription))")
@@ -221,7 +221,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 				_droneFlightController.rollPitchControlMode = DJIVirtualStickRollPitchControlMode.angle
 				_droneFlightController.yawControlMode = DJIVirtualStickYawControlMode.angle
 				_droneFlightController.verticalControlMode = DJIVirtualStickVerticalControlMode.position
-
+				
 				if (_droneFlightController.isVirtualStickControlModeAvailable() == false) {
 					print("=== DjiPlugin iOS: Virtual Stick control mode is not available")
 					self._fltSetStatus("Virtual Stick Failed")
@@ -243,13 +243,13 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			}
 		})
 	}
-
+	
 	// MARK: - Gimbal Methods
-
+	
 	public func gimbalRotatePitchDegrees(_ degrees: NSNumber, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
 		if (drone?.gimbal?.isConnected == true) {
 			//drone?.gimbal?.setMode(DJIGimbalMode.yawFollow)
-
+			
 			let djiGimbalRotation = DJIGimbalRotation.init(pitchValue: degrees, rollValue: nil, yawValue: nil, time: 1.0 as TimeInterval, mode: .absoluteAngle, ignore: true)
 			drone?.gimbal?.rotate(with: djiGimbalRotation, completion: { (error: Error?) in
 				if (error != nil) {
@@ -267,7 +267,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			self._fltSetError("Gimbal - isConnected FALSE")
 		}
 	}
-
+	
 	// MARK: - Timeline Methods
 
 	public func startFlightJson(_ flightJson: String, error _: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
@@ -275,13 +275,42 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 
 		let decoder = JSONDecoder()
 		let data = flightJson.data(using: .utf8)!
-
+		
 		if let f = try? decoder.decode(Flight.self, from: data) {
 			print("=== DjiPlugin iOS: Start Flight JSON parsed successfully: \(f)")
 			startFlightTimeline(f)
 		}
 	}
+    
+    
+    public func startFlightWaypointsJson(_ waypoints: String, error _: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
+        let decoder = JSONDecoder()
+        let data = waypoints.data(using: .utf8)!
+        
+        if let waypoints = try? decoder.decode([FlightWaypoint].self, from: data) {
+			print("=== DjiPlugin iOS: Start Flight waypoints JSON parsed successfully: \(waypoints)")
+			startFlightWaypoints(waypoints)
+            
+        } 
+    }
 
+	func startFlightWaypoints(_ waypoints: [FlightWaypoint]) {
+		if let drone = drone, drone.model == DJIAircraftModelNameMatrice300RTK {
+            self.prepareWaypointV2Mission(waypoints) {[weak self] success in
+                guard let self = self else { return }
+                if success {
+                    self.startV2Mission()
+                }
+                return
+        	}
+        } else {
+			print("=== DjiPlugin iOS: startFlightWaypoints failed")
+			_fltSetError("Start Failed")
+			_fltSetError("startFlightWaypoints failed ")
+			return
+		}
+	}
+	
 	func startFlightTimeline(_ flight: Flight) {
 		guard let timeline = flight.timeline, timeline.count > 0 else {
 			print("=== DjiPlugin iOS: startFlightTimeline failed - Timeline List is empty")
@@ -296,7 +325,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			_fltSetError("startFlightTimeline failed - No Flight Controller")
 			return
 		}
-
+		
 		if (DJISDKManager.missionControl()?.isTimelineRunning == true) {
 			print("=== DjiPlugin iOS: startFlightTimeline failed - Timeline already running - attempting to stop it")
 			_fltSetError("Start Failed")
@@ -304,14 +333,14 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			DJISDKManager.missionControl()?.stopTimeline()
 			return
 		}
-
+		
 		// Set Home Location Coordinates
 		if let currentLocation = droneCurrentLocation {
 			_droneFlightController.setHomeLocation(currentLocation)
-
+			
 			print("=== DjiPlugin iOS: startFlightTimeline - Drone Home Location Coordinates: \(currentLocation.coordinate.latitude), \(currentLocation.coordinate.longitude)")
 		}
-
+		
 		var scheduledElements = [DJIMissionControlTimelineElement]()
 
 		for flightElement in flight.timeline! {
@@ -320,60 +349,49 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 				// Take Off
 				scheduledElements.append(DJITakeOffAction())
 				break
-
+			
 			case "land":
 				// Land
 				scheduledElements.append(DJILandAction())
 				break
-
+			
 			case "waypointMission":
 				// Waypoint Mission
-                if let drone = drone {
-                    if drone.model == DJIAircraftModelNameMatrice300RTK {
-                        if let wayPointV2Mission = waypointV2Mission(flightElement) {
-                            scheduledElements.append(wayPointV2Mission)
-                        }
-                    } else {
-                        if let wayPointMission = waypointMission(flightElement) {
-                            scheduledElements.append(wayPointMission)
-                        }
-                    }
-                }
+                if let wayPointMission = waypointMission(flightElement) {
+					scheduledElements.append(wayPointMission)
+				}
                 break
             case "waypointV2Mission":
                 // Waypoint Mission
-                if let wayPointV2Mission = waypointV2Mission(flightElement) {
-                    scheduledElements.append(wayPointV2Mission)
-                }
+                
                 break
-
 			case "hotpointAction":
 				// Hot Point
 				// TBD...
 				break
-
+			
 			case "singleShootPhoto":
 				scheduledElements.append(DJIShootPhotoAction(singleShootPhoto: ())!)
 				break
-
+				
 			case "startRecordVideo":
 				scheduledElements.append(DJIRecordVideoAction(startRecordVideo: ())!)
 				break
-
+				
 			case "stopRecordVideo":
 				scheduledElements.append(DJIRecordVideoAction(stopRecordVideo: ())!)
 				break
-
+				
 			default:
 				// Do Nothing
 				break
 			}
 		}
-
+		
 		if let _missionControl = DJISDKManager.missionControl() {
 			// Making sure the MissionControl Timeline is clean
 			_missionControl.unscheduleEverything()
-
+			
 			// Listening for DJI Mission Control errors
 			_missionControl.removeAllListeners()
 			_missionControl.addListener(self, toTimelineProgressWith: { (event: DJIMissionControlTimelineEvent, element: DJIMissionControlTimelineElement?, e: Error?, info: Any?) in
@@ -383,7 +401,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 					self._fltSetError("Mission Control Error - \(error.localizedDescription)")
 				}
 			})
-
+			
 			// Adding the scheduled elements
 			var timelineSchedulingCompleted: Bool = true
 			for element in scheduledElements {
@@ -402,7 +420,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 
 				// Starting the Timeline Mission
 				_missionControl.startTimeline()
-
+				
 				_fltSetStatus("Started")
 				_fltSetError("")
 			}
@@ -425,7 +443,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 				mission.pointOfInterest = pointOfInteresetCoordinate
 			}
 		}
-
+		
 		mission.maxFlightSpeed = Float(flightElementWaypointMission.maxFlightSpeed ?? 15)
 		mission.autoFlightSpeed = Float(flightElementWaypointMission.autoFlightSpeed ?? 8)
 
@@ -493,66 +511,59 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 		}
 	}
     
-    // MARK: - WaypointV2 Methods
-    func waypointV2Mission(_ flightElementWaypointMission: FlightElement) -> DJIWaypointV2Mission? {
-        // Waypoint Mission Initialization
+	
+    
+    func prepareWaypointV2Mission(_ waypoints: [FlightWaypoint], completion: @escaping(Bool)->()) {
+        guard let operatorV2 = DJISDKManager.missionControl()?.waypointV2MissionOperator() else {
+            completion(false)
+            return
+        }
         let mission = DJIMutableWaypointV2Mission()
-
-        if let latitude = flightElementWaypointMission.pointOfInterest?.latitude, let longitude = flightElementWaypointMission.pointOfInterest?.longitude {
-            let pointOfInteresetCoordinate = CLLocationCoordinate2DMake(latitude, longitude)
-        }
-        
-        mission.maxFlightSpeed = Float(flightElementWaypointMission.maxFlightSpeed ?? 15)
-        mission.autoFlightSpeed = Float(flightElementWaypointMission.autoFlightSpeed ?? 8)
-
-        switch flightElementWaypointMission.finishedAction {
-        case "autoLand":
-            mission.finishedAction = .autoLanding
-        case "continueUntilStop":
-            mission.finishedAction = .continueUntilStop
-        default:
-            mission.finishedAction = .noAction
-        }
-
-        mission.exitMissionOnRCSignalLost = flightElementWaypointMission.exitMissionOnRCSignalLost ?? true
-
-        mission.gotoFirstWaypointMode = .pointToPoint
+        mission.maxFlightSpeed = 8
+        mission.autoFlightSpeed = 2
+        mission.exitMissionOnRCSignalLost = true
+        mission.gotoFirstWaypointMode = .safely
         mission.repeatTimes = 1
 
-        // Waypoints
-        if let flightWaypoints = flightElementWaypointMission.waypoints {
-            for flightWaypoint in flightWaypoints {
-                if let latitude = flightWaypoint.location?.latitude, let longitude = flightWaypoint.location?.longitude, let altitude = flightWaypoint.location?.altitude {
-                    let coordinate = CLLocationCoordinate2DMake(latitude, longitude)
-                    let waypoint = DJIWaypointV2(coordinate: coordinate)
-                    waypoint.altitude = Float(altitude)
-                    waypoint.heading = flightWaypoint.heading ?? 0
-                    switch flightWaypoint.turnMode {
-                    case "counterClockwise":
-                        waypoint.turnMode = .counterClockwise
-                    default:
-                        waypoint.turnMode = .clockwise
-                    }
-
-                    mission.addWaypoint(waypoint)
-                } else {
-                    print("=== DjiPlugin iOS: waypointMission - waypoint without location coordinates - skipping")
+        mission.gotoFirstWaypointMode = .pointToPoint
+        for flightWaypoint in waypoints {
+            if let latitude = flightWaypoint.location?.latitude, let longitude = flightWaypoint.location?.longitude, let altitude = flightWaypoint.location?.altitude {
+                let coordinate = CLLocationCoordinate2DMake(latitude, longitude)
+                let waypoint = DJIWaypointV2(coordinate: coordinate)
+                waypoint.altitude = Float(altitude)
+                waypoint.heading = flightWaypoint.heading ?? 0
+                switch flightWaypoint.turnMode {
+                case "counterClockwise":
+                    waypoint.turnMode = .counterClockwise
+                default:
+                    waypoint.turnMode = .clockwise
                 }
+                mission.addWaypoint(waypoint)
+            } else {
+                print("=== DjiPlugin iOS: waypointMission - waypoint without location coordinates - skipping")
             }
-            return DJIWaypointV2Mission(mission: mission)
-        } else {
-            print("=== DjiPlugin iOS: waypointMission - No waypoints available - exiting")
+        }
+        operatorV2.load(mission) { error in
+            error != nil ? completion(false) : completion(true)
+        }
+    }
+    
+    func startV2Mission() {
+        guard let operatorV2 = DJISDKManager.missionControl()?.waypointV2MissionOperator() else {
+            return
+        }
+        operatorV2.startMission { error in
+            print("=== DjiPlugin iOS: waypointMission - start error - exiting")
             self._fltSetStatus("Error")
-            self._fltSetError("waypointMission - No waypoints available - exiting")
-            return nil
+            self._fltSetError("waypointMission - start error - exiting")
         }
     }
 
 	// MARK: - Media Methods
-
+	
 	public func getMediaListWithError(_ error: AutoreleasingUnsafeMutablePointer<FlutterError?>) -> [FLTMedia]? {
 		var _fltMediaList = [FLTMedia]()
-
+		
 		if let _droneCamera = drone?.camera {
 			_droneCamera.setMode(DJICameraMode.mediaDownload, withCompletion: { (error: Error?) in
 				if (error != nil) {
@@ -561,7 +572,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 					self._fltSetError("Get media list - set camera mode failed with error - \(String(describing: error?.localizedDescription))")
 				} else {
 					print("=== DjiPlugin iOS: Get media list started")
-
+					
 					if let _droneMediaManager = _droneCamera.mediaManager {
 						// Fetching the Media List from the Drone's SD Card
 						if _droneMediaManager.sdCardFileListState == DJIMediaFileListState.syncing ||
@@ -580,17 +591,17 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 										print("=== DjiPlugin iOS: Get media list successful")
 										self?._fltSetStatus("Got Media List")
 										self?._fltSetError("")
-
+										
 										self?.mediaFileList = sdCardMediaFileList
-
+										
 										// Preparing the Flutter Media List
 										for mediaFile in sdCardMediaFileList {
 											let fltMediaListElement = FLTMedia()
 											fltMediaListElement.fileName = mediaFile.fileName
 											fltMediaListElement.fileIndex = mediaFile.index as NSNumber
-
+											
 											_fltMediaList.append(fltMediaListElement)
-
+											
 											print("=== DjiPlugin iOS: Get media list - added file \(mediaFile.fileName)")
 										}
 									} else {
@@ -613,10 +624,10 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			_fltSetStatus("Media List Failed")
 			_fltSetError("Get media list - no Camera object")
 		}
-
+		
 		return _fltMediaList
 	}
-
+	
 	public func downloadMediaFileIndex(_ fileIndex: NSNumber, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) -> String? {
 		var _mediaURLString: String = ""
 		let _index: Int = fileIndex.intValue
@@ -743,27 +754,27 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 
 		return _mediaURLString
 	}
-
+	
 	public func deleteMediaFileIndex(_ fileIndex: NSNumber, error: AutoreleasingUnsafeMutablePointer<FlutterError?>) -> NSNumber? {
 		var _success: Bool = false
 		let _index: Int = fileIndex.intValue
-
+		
 		guard _index >= 0 else {
 			print("=== DjiPlugin iOS: Delete media failed - invalid index")
 			_fltSetStatus("Delete Failed")
 			_fltSetError("Delete media failed - invalid index")
-
+			
 			return nil
 		}
-
+		
 		guard !mediaFileList.isEmpty else {
 			print("=== DjiPlugin iOS: Delete media failed - list is empty")
 			_fltSetStatus("Delete Failed")
 			_fltSetError("Delete media failed - list is empty")
-
+			
 			return nil
 		}
-
+		
 		if let _droneCamera = drone?.camera {
 			_droneCamera.setMode(DJICameraMode.mediaDownload, withCompletion: { (error: Error?) in
 				if (error != nil) {
@@ -774,11 +785,11 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 					print("=== DjiPlugin iOS: Delete media started")
 					self._fltSetStatus("Delete Started")
 					self._fltSetError("")
-
+					
 					if let _droneMediaManager = _droneCamera.mediaManager {
 						if let selectedMedia = self.mediaFileList[_index] {
 							_droneMediaManager.delete([selectedMedia])
-
+							
 							print("=== DjiPlugin iOS: Delete media completed")
 							self._fltSetStatus("Deleted")
 							self._fltSetError("")
@@ -791,7 +802,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 						}
 					} else {
 						print("=== DjiPlugin iOS: Delete media failed - no Playback Manager")
-
+						
 						self._fltSetStatus("Delete Failed")
 						self._fltSetError("Delete media failed - no Playback Manager")
 						_success = false
@@ -804,12 +815,12 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			_fltSetError("Delete all media failed - no Camera object")
 			_success = false
 		}
-
+		
 		return _success as NSNumber
 	}
-
+	
 	// MARK: - Video Feed Methods
-
+	
 	public func videoFeedStartWithError(_ error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
 		if let _droneCamera = drone?.camera {
 			_droneCamera.setMode(DJICameraMode.recordVideo, withCompletion: { (error: Error?) in
@@ -819,14 +830,14 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 					self._fltSetError("Video feed start failed with error - \(String(describing: error?.localizedDescription))")
 				} else {
 					DJISDKManager.videoFeeder()?.primaryVideoFeed.add(self, with: nil)
-
+		
 					DJIVideoPreviewer.instance().type = .none
 					DJIVideoPreviewer.instance().enableHardwareDecode = true
 					DJIVideoPreviewer.instance().enableFastUpload = true
 					DJIVideoPreviewer.instance().encoderType = ._MavicAir
 					DJIVideoPreviewer.instance().registFrameProcessor(self)
 					DJIVideoPreviewer.instance().start()
-
+					
 					print("=== DjiPlugin iOS: Video feed started")
 					self._fltSetStatus("Video Started")
 					self._fltSetError("")
@@ -838,7 +849,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			_fltSetError("Video record start failed - no Camera object")
 		}
 	}
-
+	
 	public func videoFeedStopWithError(_ error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
 		if let _droneCamera = drone?.camera {
 			_droneCamera.setMode(DJICameraMode.recordVideo, withCompletion: { (error: Error?) in
@@ -852,7 +863,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 					DJIVideoPreviewer.instance().clearRender()
 					DJIVideoPreviewer.instance().clearVideoData()
 					DJIVideoPreviewer.instance().unregistFrameProcessor(self)
-
+					
 					self._fltSetStatus("Video Stopped")
 					self._fltSetError("")
 				}
@@ -863,11 +874,11 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			_fltSetError("Video feed stop failed - no Camera object")
 		}
 	}
-
+	
 	public func videoProcessorEnabled() -> Bool {
 		return true
 	}
-
+	
 	public func videoRecordStartWithError(_ error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
 		if let _droneCamera = drone?.camera {
 			_droneCamera.setMode(DJICameraMode.recordVideo, withCompletion: { (error: Error?) in
@@ -895,7 +906,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			_fltSetError("Video record start failed - no Camera object")
 		}
 	}
-
+	
 	public func videoRecordStopWithError(_ error: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
 		if let _droneCamera = drone?.camera {
 			_droneCamera.setMode(DJICameraMode.recordVideo, withCompletion: { (error: Error?) in
@@ -923,20 +934,20 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			_fltSetError("Video record stop failed - no Camera object")
 		}
 	}
-
+	
 	// MARK: - Video Feed Delegate Methods
-
+	
 	public func videoFeed(_ videoFeed: DJIVideoFeed, didUpdateVideoData videoData: Data) {
 		// Sending the data (H264 Raw byte-stream) to Flutter as Uint8List
 		//_fltSendVideo(videoData)
-
+		
 		// Push video buffer into the DJI Video Previewer
 		let videoNSData = videoData as NSData
 		let videoBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: videoNSData.length)
 		videoNSData.getBytes(videoBuffer, length: videoNSData.length)
 		DJIVideoPreviewer.instance().push(videoBuffer, length: Int32(videoNSData.length))
 	}
-
+	
 	public func videoProcessFrame(_ frame: UnsafeMutablePointer<VideoFrameYUV>!) {
 //		if let buffer = frame.pointee.cv_pixelbuffer_fastupload {
 //			let videoData = Data([UInt8](arrayLiteral: buffer.load(as: UInt8.self)))
@@ -960,37 +971,37 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 				_fltSendVideo(videoData)
 		}
 	}
-
+	
 	func createPixelBuffer(fromFrame frame: VideoFrameYUV) -> CVPixelBuffer? {
 		var initialPixelBuffer: CVPixelBuffer?
 		let _: CVReturn = CVPixelBufferCreate(kCFAllocatorDefault, Int(frame.width), Int(frame.height), kCVPixelFormatType_420YpCbCr8Planar, nil, &initialPixelBuffer)
-
+		
 		guard let pixelBuffer = initialPixelBuffer,
 			CVPixelBufferLockBaseAddress(pixelBuffer, []) == kCVReturnSuccess
 			else {
 			return nil
 		}
-
+		
 		let yPlaneWidth = CVPixelBufferGetWidthOfPlane(pixelBuffer, 0)
 		let yPlaneHeight = CVPixelBufferGetHeightOfPlane(pixelBuffer, 0)
-
+		
 		let uPlaneWidth = CVPixelBufferGetWidthOfPlane(pixelBuffer, 1)
 		let uPlaneHeight = CVPixelBufferGetHeightOfPlane(pixelBuffer, 1)
-
+		
 		let vPlaneWidth = CVPixelBufferGetWidthOfPlane(pixelBuffer, 2)
 		let vPlaneHeight = CVPixelBufferGetHeightOfPlane(pixelBuffer, 2)
-
+		
 		let yDestination = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 0)
 		memcpy(yDestination, frame.luma, yPlaneWidth * yPlaneHeight)
-
+		
 		let uDestination = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 1)
 		memcpy(uDestination, frame.chromaB, uPlaneWidth * uPlaneHeight)
-
+		
 		let vDestination = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 2)
 		memcpy(vDestination, frame.chromaR, vPlaneWidth * vPlaneHeight)
-
+		
 		CVPixelBufferUnlockBaseAddress(pixelBuffer, [])
-
+		
 		return pixelBuffer
 	}
 

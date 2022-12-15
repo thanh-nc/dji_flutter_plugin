@@ -365,6 +365,14 @@ class Dji {
     await _api?.start(jsonEncode(flightJson));
   }
 
+  static Future<void> startFlightWaypoints ({required List<FlightWaypoint> waypoints}) async {
+    final json = jsonEncode(waypoints,
+        toEncodable: (e) => (e as FlightWaypoint).toJson());
+    print("json array: $json");
+
+    await _api?.startFlightWaypoints(json);
+  }
+
   /// Update Mobile Remote Controller Sticks Data (via Wifi)
   ///
   /// Controls the mobile remote controller - an on-screen sticks controller.

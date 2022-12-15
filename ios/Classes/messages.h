@@ -26,16 +26,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface FLTDrone : NSObject
 + (instancetype)makeWithStatus:(nullable NSString *)status
-    error:(nullable NSString *)error
-    batteryPercent:(nullable NSNumber *)batteryPercent
-    altitude:(nullable NSNumber *)altitude
-    latitude:(nullable NSNumber *)latitude
-    longitude:(nullable NSNumber *)longitude
-    speed:(nullable NSNumber *)speed
-    roll:(nullable NSNumber *)roll
-    pitch:(nullable NSNumber *)pitch
-    yaw:(nullable NSNumber *)yaw
-    name:(nullable NSString *)name;
+                         error:(nullable NSString *)error
+                batteryPercent:(nullable NSNumber *)batteryPercent
+                      altitude:(nullable NSNumber *)altitude
+                      latitude:(nullable NSNumber *)latitude
+                     longitude:(nullable NSNumber *)longitude
+                         speed:(nullable NSNumber *)speed
+                          roll:(nullable NSNumber *)roll
+                         pitch:(nullable NSNumber *)pitch
+                           yaw:(nullable NSNumber *)yaw
+                          name:(nullable NSString *)name;
 @property(nonatomic, copy, nullable) NSString * status;
 @property(nonatomic, copy, nullable) NSString * error;
 @property(nonatomic, strong, nullable) NSNumber * batteryPercent;
@@ -51,8 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface FLTMedia : NSObject
 + (instancetype)makeWithFileName:(nullable NSString *)fileName
-    fileUrl:(nullable NSString *)fileUrl
-    fileIndex:(nullable NSNumber *)fileIndex;
+                         fileUrl:(nullable NSString *)fileUrl
+                       fileIndex:(nullable NSNumber *)fileIndex;
 @property(nonatomic, copy, nullable) NSString * fileName;
 @property(nonatomic, copy, nullable) NSString * fileUrl;
 @property(nonatomic, strong, nullable) NSNumber * fileIndex;
@@ -91,6 +91,7 @@ NSObject<FlutterMessageCodec> *FLTDjiHostApiGetCodec(void);
 - (void)videoFeedStopWithError:(FlutterError *_Nullable *_Nonnull)error;
 - (void)videoRecordStartWithError:(FlutterError *_Nullable *_Nonnull)error;
 - (void)videoRecordStopWithError:(FlutterError *_Nullable *_Nonnull)error;
+- (void)startFlightWaypointsJson:(NSString *)flightWaypointsJson error:(FlutterError *_Nullable *_Nonnull)error;
 @end
 
 extern void FLTDjiHostApiSetup(id<FlutterBinaryMessenger> binaryMessenger, NSObject<FLTDjiHostApi> *_Nullable api);
