@@ -92,7 +92,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 
 	public func connectDroneWithError(_: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
 		print("=== DjiPlugin iOS: Connect Drone Started")
-		DJISDKManager.enableBridgeMode(withBridgeAppIP: "172.40.1.157")
+		DJISDKManager.enableBridgeMode(withBridgeAppIP: "192.168.113.84")
 		DJISDKManager.startConnectionToProduct()
 	}
 
@@ -299,7 +299,10 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
             self.prepareWaypointV2Mission(waypoints) {[weak self] success in
                 guard let self = self else { return }
                 if success {
-                    self.startV2Mission()
+                    DispatchQueue.main.asyncAfter(deadline: .now()+2) {
+                        self.startV2Mission()
+                    }
+                    
                 }
                 return
         	}
@@ -538,6 +541,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
                 default:
                     waypoint.turnMode = .clockwise
                 }
+                print("=== DjiPlugin iOS: waypoint: \(waypoint.heading), \(waypoint)")
                 mission.addWaypoint(waypoint)
             } else {
                 print("=== DjiPlugin iOS: waypointMission - waypoint without location coordinates - skipping")
@@ -552,11 +556,20 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
         guard let operatorV2 = DJISDKManager.missionControl()?.waypointV2MissionOperator() else {
             return
         }
-        operatorV2.startMission { error in
-            print("=== DjiPlugin iOS: waypointMission - start error - exiting")
-            self._fltSetStatus("Error")
-            self._fltSetError("waypointMission - start error - exiting")
+        operatorV2.uploadMission { err in
+            if err == nil {
+                DispatchQueue.main.asyncAfter(deadline: .now()+2) {
+                    operatorV2.startMission { error in
+                        if error != nil {
+                            self._fltSetStatus("error")
+                            self._fltSetError("waypointMission - start error \(error?.localizedDescription ?? "exiting")")
+                        }
+                        
+                    }
+                }
+            }
         }
+        
     }
 
 	// MARK: - Media Methods

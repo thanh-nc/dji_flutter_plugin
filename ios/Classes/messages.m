@@ -413,21 +413,32 @@ void FLTDjiHostApiSetup(id<FlutterBinaryMessenger> binaryMessenger, NSObject<FLT
         }
     }
     {
+    FlutterBasicMessageChannel *channel =
+      [[FlutterBasicMessageChannel alloc]
+        initWithName:@"dev.flutter.pigeon.DjiHostApi.start"
+        binaryMessenger:binaryMessenger
+        codec:FLTDjiHostApiGetCodec()        ];
+    if (api) {
+      NSCAssert([api respondsToSelector:@selector(startFlightJson:error:)], @"FLTDjiHostApi api (%@) doesn't respond to @selector(startFlightJson:error:)", api);
+      [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
+        NSArray *args = message;
+        NSString *arg_flightJson = GetNullableObjectAtIndex(args, 0);
+        FlutterError *error;
+        [api startFlightJson:arg_flightJson error:&error];
+        callback(wrapResult(nil, error));
+      }];
+    }
+    else {
+      [channel setMessageHandler:nil];
+    }
+  }
+
+    {
         FlutterBasicMessageChannel *channel =
         [[FlutterBasicMessageChannel alloc]
          initWithName:@"dev.flutter.pigeon.DjiHostApi.startFlightWaypoints"
          binaryMessenger:binaryMessenger
          codec:FLTDjiHostApiGetCodec()        ];
-        if (api) {
-            NSCAssert([api respondsToSelector:@selector(startFlightJson:error:)], @"FLTDjiHostApi api (%@) doesn't respond to @selector(startFlightJson:error:)", api);
-            [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
-                NSArray *args = message;
-                NSString *arg_flightJson = GetNullableObjectAtIndex(args, 0);
-                FlutterError *error;
-                [api startFlightJson:arg_flightJson error:&error];
-                callback(wrapResult(nil, error));
-            }];
-        }
         if (api) {
             NSCAssert([api respondsToSelector:@selector(startFlightWaypointsJson:error:)], @"FLTDjiHostApi api (%@) doesn't respond to @selector(startFlightWaypointsJson:error:)", api);
             [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
