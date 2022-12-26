@@ -17,6 +17,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 	var videoFeedPath: String?
 	var videoFeedFileData: Data?
 
+    var isShowDowloadingData = false
 	public static func register(with registrar: FlutterPluginRegistrar) {
 		let messenger: FlutterBinaryMessenger = registrar.messenger()
 		let api: FLTDjiHostApi & NSObjectProtocol = SwiftDjiPlugin()
@@ -92,7 +93,7 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 
 	public func connectDroneWithError(_: AutoreleasingUnsafeMutablePointer<FlutterError?>) {
 		print("=== DjiPlugin iOS: Connect Drone Started")
-		DJISDKManager.enableBridgeMode(withBridgeAppIP: "192.168.113.84")
+		
 		DJISDKManager.startConnectionToProduct()
 	}
 
@@ -1022,6 +1023,36 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 
 	public func didUpdateDatabaseDownloadProgress(_ progress: Progress) {
 		print("Downloading database: \(progress.completedUnitCount) / \(progress.totalUnitCount)")
+        let alert = UIAlertController(title: nil, message: "Downloading...", preferredStyle: .alert)
+
+        let loadingIndicator = UIActivityIndicatorView(frame: CGRect(x: 10, y: 5, width: 50, height: 50))
+        loadingIndicator.hidesWhenStopped = true
+        loadingIndicator.style = UIActivityIndicatorView.Style.medium
+        loadingIndicator.startAnimating();
+
+        alert.view.addSubview(loadingIndicator)
+        if progress.completedUnitCount == progress.totalUnitCount {
+            if let window = UIApplication.shared.windows.first, let rootViewController = window.rootViewController {
+               var currentController = rootViewController
+               while let presentedController = currentController.presentedViewController {
+                   currentController = presentedController
+                }
+                   currentController.dismiss(animated: true)
+            }
+            isShowDowloadingData = false
+        } else {
+            if !isShowDowloadingData {
+                if let window = UIApplication.shared.windows.first, let rootViewController = window.rootViewController {
+                   var currentController = rootViewController
+                   while let presentedController = currentController.presentedViewController {
+                       currentController = presentedController
+                    }
+                       currentController.present(alert, animated: true, completion: nil)
+                }
+                isShowDowloadingData = true
+            }
+            
+        }
 	}
 
 	public func appRegisteredWithError(_ error: Error?) {
@@ -1033,6 +1064,8 @@ public class SwiftDjiPlugin: FLTDjiFlutterApi, FlutterPlugin, FLTDjiHostApi, DJI
 			print("=== DjiPlugin iOS: Register App successful")
 			_fltSetStatus("Registered")
 			_fltSetError("")
+//            DJISDKManager.enableBridgeMode(withBridgeAppIP: "172.40.0.232")
+            DJISDKManager.startConnectionToProduct()
 		}
 	}
 
